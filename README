@@ -20,12 +20,16 @@ when the calls are both found it will bridge into one call
 Instructions / Howto:
 
 Setting It Up:
+----------------------------------------------------------------
 
 To set the SIP call processor up, you will need to:
 
 git clone  https://github.com/BandwidthExamples/php-voice-reference-app.git
 
-update credentials.json with your own
+update credentials.json with your own Bandwidth User Id, Token API Key and secret,
+found in your catapult account settings:
+
+Next:
 
 check its running properly via:
 
@@ -35,6 +39,24 @@ if all is well you should get:
 
 "Thanks you can use the SIP Call Processing application"
 
+Deploying
+==============================================================
+
+Once you've inputted your credentials, you can deploy the application,
+below are some instructions
+
+Heroku 
+---------------------------------------------------------------
+
+you can deploy this on heroku using the attached procfile,
+make sure your webserver config is using the attached .htaccess file
+
+commands:
+
+  heroku create "my-sip-application"
+  git push heroku master
+
+Your application should now be viewable as my-sip-applicaiton.herokuapp.com
 
 
 More:
@@ -49,17 +71,10 @@ it is good to make a seperate application just for this program
 
 Examples (using curl):
 
-incoming
+Creating a user with a number
 
-curl -H 'username: my_username' -H 'password: my_password'  php-bandwidth-applications/incoming/
+curl -H 'username: my_username' -H 'password: my_password'  http://{server_url}/users/
 
-response:
+listening to incoming calls
 
-
-
-
-outgoing
-curl -H 'username: my_username' -H 'password: my_password' php-bandwidth-applications/outgoing/
-
-Both of these will create a new endpoint when one does not exist and listen for
-incoming, answer call events on these URLS
+curl -H http://{server_url}/callback

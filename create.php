@@ -29,6 +29,9 @@ function createIfNeeded($username='', $password='', $domainName=DEFAULT_DOMAIN_N
 
     // first let's retrieve or create
     // a new application
+    //
+    // TODO: currently supports a single user
+    // this should be multiuser based
     $applications = new Catapult\ApplicationCollection;
     $applications = $applications->listAll(array("size" => 1000))->find(array(
        "name" => $applicationName

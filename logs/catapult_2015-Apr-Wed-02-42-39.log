@@ -1,1 +1,0 @@
- (line: 130) - APPLICATION:__APP_ID__ [Apr/04/15:02:42:39] - Request was brought back with error => {"category":"bad-request","code":"validation-error","message":"callIds are equals","details":[{"name":"requestMethod","value":"POST"},{"name":"remoteAddress","value":"159.100.186.106"},{"name":"requestPath","value":"users\/u-mmuxnl7o2u2ijsdg2hrwdsq\/bridges"}]}

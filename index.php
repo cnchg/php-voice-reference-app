@@ -18,13 +18,13 @@
 //
 // This can be called as follows:
 //
-// {your_server}.tld/outgoing
+//
+// {your_server}.tld/callback/
 // OR 
-// {your_server}.tld/incoming
+// {your_server}.tld/users/
 //
-// you should call the incoming url first,
-// this is documented in the README
-//
+// make sure you call /users/
+// before using the /callback/
 require_once(__DIR__."/config.php");
 require_once(__DIR__."/create.php");
 
