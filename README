@@ -23,7 +23,7 @@ Setting It Up:
 
 To set the SIP call processor up, you will need to:
 
-git clone  {url_tba}
+git clone  https://github.com/BandwidthExamples/php-voice-reference-app.git
 
 update credentials.json with your own
 
@@ -52,6 +52,11 @@ Examples (using curl):
 incoming
 
 curl -H 'username: my_username' -H 'password: my_password'  php-bandwidth-applications/incoming/
+
+response:
+
+
+
 
 outgoing
 curl -H 'username: my_username' -H 'password: my_password' php-bandwidth-applications/outgoing/
