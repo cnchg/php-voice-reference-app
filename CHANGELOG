@@ -1,0 +1,9 @@
+0.1.0
+------------------------------------------------------------
+
+- Basic SIP (server, client) integration
+
+  - application provides an interface to create SIP domains 
+  on demand, using your Catapult login
+  - application defines a set of rules to listen to incoming/outgoing 
+  SIP calls
