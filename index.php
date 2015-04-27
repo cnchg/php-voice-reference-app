@@ -19,9 +19,10 @@
 // This can be called as follows:
 //
 //
-// {your_server}.tld/callback/
+// {your_server}.tld/callback/{username}
 // OR 
 // {your_server}.tld/users/
+// with headers "username={your_username}" "password={your_password}":
 //
 // make sure you call /users/
 // before using the /callback/
@@ -46,10 +47,17 @@ try {
     // we should exit
     // 
     // as our SIP client was not setup properly
-    if (!$result) {
 
+    if (is_int($result) && $result == SIP_APPLICATION_SCRIPT_ERROR) {
+      // something is not right with our script
+      printf("Something went wrong in storing your user contents, make sure they are properly encoded, for more info please view", GITHUB_URL);
+    } elseif (is_int($result) && $result == SIP_APPLICATION_SERVER_ERROR) {
+      // something went wrong in one of the catapult requests
       printf("SIP client was not setup correct, please change your credentials or view our docs at: %s", SIP_DOCS);
-      die;
+
+    } elseif (is_int($result) && $result == SIP_APPLICATION_USER_FOUND_WRONG_PASSWORD) {
+      printf("The user %s was already registered this password is not correct", $headers['username']);
+
     } else {
       // send our headers and information
       // the creation was a success
@@ -67,8 +75,14 @@ try {
     //
     //
     // url should be as follows:
-    // https|http://{your_server}.tld/bandwidth-sip-application/callback/
+ 
+    // https|http://{your_server}.tld/bandwidth-sip-application/callback/{username}
     //
+
+    // check which user
+    // is making this call from the username
+    //
+    $user = getUser($_REQUEST['username']);
 
     // Our two state events
     // these will both be used in creating
@@ -76,6 +90,7 @@ try {
     //
     // our answer which  listens
     // to registrar 
+    
     $client = new Catapult\Client;
     $answerCallEvent = new Catapult\AnswerCallEvent;
     $incomingCallEvent = new Catapult\IncomingCallEvent;
@@ -93,7 +108,6 @@ try {
     // say thank you
     // this needs to 
     // be an SIP endpoint
-
     if ($answerCallEvent->isActive()) {
        $sip = new Catapult\SIP($answerCallEvent->to);
        // while we check 

@@ -19,9 +19,17 @@ define("DEFAULT_DOMAIN_DESCRIPTION", "a unique description");
 define("DEFAULT_ENDPOINT_DESCRIPTION", "a unique endpoint description");
 define("DEFAULT_AREA_CODE", "469");
 define("DEFAULT_ACCOUNT_NAME", "");
+/** error from our script **/
+define("SIP_APPLICATION_SCRIPT_ERROR", -1);
+/** error from catapult server **/
+define("SIP_APPLICATION_SERVER_ERROR", -2);
+define("SIP_APPLICATION_USER_CREATED", 1);
+define("SIP_APPLICATION_USER_NOT_FOUND", 0);
+define("SIP_APPLICATION_USER_FOUND_WRONG_PASSWORD", -3);
+define("DEFAULT_USERS_FILE", "users.json");
+define("DEFAULT_CONFIG_FILE", "config.php");
 
 require_once(__DIR__."/config.php");
-
 function createIfNeeded($username='', $password='', $domainName=DEFAULT_DOMAIN_NAME, $domainDescription=DEFAULT_DOMAIN_DESCRIPTION, $endpointDescription=DEFAULT_ENDPOINT_DESCRIPTION, $areaCode=DEFAULT_AREA_CODE, $applicationName=DEFAULT_APPLICATION_NAME) {
   try {
     $client = new Catapult\Client;
@@ -32,6 +40,21 @@ function createIfNeeded($username='', $password='', $domainName=DEFAULT_DOMAIN_N
     //
     // TODO: currently supports a single user
     // this should be multiuser based
+    $newUser = addUserIfNeeded($username, $password);
+    if ($newUser == SIP_APPLICATION_USER_CREATED) {
+      // this means
+      // our user was already
+      // created and this is a 
+      // 
+      // subsequent request, we
+      // can find all our data in users.json
+      return getUser($username); 
+    } elseif ($newUser == SIP_APPLICATION_USER_FOUND_WRONG_PASSWORD) {
+      // our additional request
+      // was found with the wrong
+      // username, password
+      return SIP_APPLICATION_USER_FOUND_WRONG_PASSWORD; 
+    }
     $applications = new Catapult\ApplicationCollection;
     $applications = $applications->listAll(array("size" => 1000))->find(array(
        "name" => $applicationName
@@ -51,14 +74,14 @@ function createIfNeeded($username='', $password='', $domainName=DEFAULT_DOMAIN_N
         // page
         //
         // as we are using PHP_SELF
-        "incomingCallUrl" => "http://" . $_SERVER{"HTTP_HOST"} . preg_replace("/index\.php/", "", $_SERVER{'PHP_SELF'} . "callback/"),
+        // add the username in our callback
+        "incomingCallUrl" => "http://" . $_SERVER{"HTTP_HOST"} . preg_replace("/index\.php/", "", $_SERVER{'PHP_SELF'} . sprintf("callback/%s", $username) ),
         "autoAnswer" => TRUE
       ));
     } else {
       $application = $applications->last();
     }
 
-    file_put_contents("./testing1", json_encode(file_get_contents("php://input")));
     // now we can check 
     // for domains under this
     // account which should
@@ -173,11 +196,18 @@ function createIfNeeded($username='', $password='', $domainName=DEFAULT_DOMAIN_N
       ));  
     } 
 
-    return array(
-      "endpoint" => $endpoint->toArray(),
-      "number" => $phoneNumber->number,
-      "domain" => $domain->toArray()
-    );
+    // create our user
+    // only return succes on succesful file i/o
+    //
+    $addedUser = addUser($username, $password, $domain, $endpoint, $phoneNumber->number);
+
+    if ($addedUser) {
+      return array(
+        "endpoint" => $endpoint->toArray(),
+        "number" => $phoneNumber->number,
+        "domain" => $domain->toArray()
+      );
+    }
 
   } catch (CatapultApiException $e) {
     // something happened
@@ -186,8 +216,71 @@ function createIfNeeded($username='', $password='', $domainName=DEFAULT_DOMAIN_N
     $error = $e->getResult();
     echo json_encode($error);     
 
-    return false; 
+    return SIP_APPLICATION_SERVER_ERROR; 
   }
+
+  // something went wrong
+  // we should warn the user, this is 
+  // either file i/o or some internal reason
+  return SIP_APPLICATION_SCRIPT_ERROR;
+}
+
+// add a user to our
+// users.json if we need to
+// this should validate the current password
+// 
+// accept the applicationId, default endpoint and our default number
+function addUserIfNeeded($username='', $password='', $domain=array(), $endpoint=array(), $defaultNumber='') {
+
+  $users = json_decode(file_get_contents(realpath("./users.json")));
+  if (sizeof($users)>0) {
+    foreach ($users as $user) {
+      if ($user->username == $username && md5($password) == $user->password) {
+        return 1;
+      }
+      if ($user->username == $username) {
+        // TODO we can wrap this around our exception 
+
+        return SIP_APPLICATION_USER_FOUND_WRONG_PASSWORD; //same password was not provided, creating user was tried
+      }
+    }
+  }
+  // generic this is a new user
+
+  return 0;
+}
+
+// add a user to our
+// endpoint records
+function addUser($username, $password, $domain=array(), $endpoint=array(), $defaultNumber) {
+  $users = (array) json_decode(file_get_contents(realpath("./") . "/" . DIRECTORY_SEPARATOR . DEFAULT_USERS_FILE));
+  // when we're null create
+  // a new context
+  $users[] = array(
+    "uuid" => uniqid(true),
+    "username" => $username,
+    "password" => md5($password),
+    "domain" => $domain->toArray(),
+    "endpoint" => $endpoint->toArray()
+  );
+  $res = file_put_contents(realpath("./") . "/" . DEFAULT_USERS_FILE, json_encode($users));
+  // make sure we specify our result
+  return $res;
+}
+// once we are authenticated, we can
+// use getUser, this should return all our
+// data without having to make, lookup catapult 
+function getUser($username='') {
+  $users = json_decode(file_get_contents(realpath("./") . "/" . DEFAULT_USERS_FILE));
+  if (sizeof($users) > 0) {
+    foreach ($users as $user) {
+      if ($user->username == $username) {
+        return $user;
+      }
+    }
+  }
+  // hardly possible, implementor mistake
+  return null;
 }
 
 ?>

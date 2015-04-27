@@ -12,6 +12,15 @@ try {
   $client = new Catapult\Client;
   $account = new Catapult\Account;
   $account->get();
+  // make sure users and config.json
+  // are proper json files
+  $files = array( "users.json", "credentials.json");
+  foreach ($files as $file) {
+    $obj = json_decode(file_get_contents(__DIR__ . $file));
+    if (!is_object($obj)) {
+      throw new Exception(sprintf("The file: %s is not properly encoded", $file));
+    }
+  }
 
   printf("Thanks you can use the SIP Call Processing application\n");
 } catch ( CatapultApiException $e) {

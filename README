@@ -77,4 +77,9 @@ curl -H 'username: my_username' -H 'password: my_password'  http://{server_url}/
 
 listening to incoming calls
 
-curl -H http://{server_url}/callback
+curl -H http://{server_url}/callback/{username}
+
+Other Notes:
+
+- username can be created once, subsequent requests with the same username and different
+password will result in an error
