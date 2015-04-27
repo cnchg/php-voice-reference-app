@@ -179,6 +179,10 @@ try {
         if ($call->state == Catapult\CALL_STATES::started) {
           $call->answer();
         }
+        // other number is
+        // defined for this user in users.json
+        $otherNumber = $user->number;
+
         // using our other PSTN number
         // we can create a call to this 'to'
         // pstn

@@ -83,3 +83,6 @@ Other Notes:
 
 - username can be created once, subsequent requests with the same username and different
 password will result in an error
+
+- when testing the server-to-client be sure to switch your application
+autoAnswer=False

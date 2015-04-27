@@ -260,6 +260,7 @@ function addUser($username, $password, $domain=array(), $endpoint=array(), $defa
     "uuid" => uniqid(true),
     "username" => $username,
     "password" => md5($password),
+    "number" => $defaultNumber,
     "domain" => $domain->toArray(),
     "endpoint" => $endpoint->toArray()
   );
