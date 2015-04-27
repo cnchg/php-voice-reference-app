@@ -1,3 +1,5 @@
 --  04/27/2015
 
 -- heroku integration needs testing
+-- testing application from unknown PSTN to SIP 
+client with autoAnswer = FALSE

@@ -1,0 +1,16 @@
+{
+  "name": "bandwidth/catapult-sip-application",
+  "type": "library",
+  "description": "Call registering with Catapult SIP",
+  "keywords": ["bandwidth", "catapult", "sdk", "php"],
+  "homepage": "https://github.com/BandwidthExamples/php-voice-reference-app",
+  "reference": "v0.2.0",
+  "require": {
+    "php": "5.5.20"
+   },
+  "authors": [{
+        "name": "Nadir Hamid",
+       "email": "matrix.nad@gmail.com",
+       "role": "Developer"
+  }]
+}

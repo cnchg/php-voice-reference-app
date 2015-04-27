@@ -27,6 +27,7 @@
 // make sure you call /users/
 // before using the /callback/
 require_once(__DIR__."/config.php");
+require_once(__DIR__."/helpers.php");
 require_once(__DIR__."/create.php");
 
 try {
@@ -83,6 +84,10 @@ try {
     // is making this call from the username
     //
     $user = getUser($_REQUEST['username']);
+    // todo when this is not
+    // a valid user do not process
+    //
+    //
 
     // Our two state events
     // these will both be used in creating
