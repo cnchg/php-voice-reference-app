@@ -277,6 +277,7 @@ function getUser($userName='') {
       if ($user->username == $userName) {
         unset($user->domain);
         unset($user->password);
+        unset($user->endpoint->domains);
         unset($user->uuid);
         return $user;
       }
