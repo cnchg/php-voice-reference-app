@@ -271,7 +271,7 @@ class GenericResource {
     public function __toString()
     {
       /** keys to not include **/
-      $not = array("primary_method", "lastUpdate", "client", "path");
+      $not = array("primary_method", "lastUpdate", "client");
       $keys = get_object_vars($this);
       $str = str_replace("Catapult\\", "", get_class($this)) . "{";
       foreach ($keys as $k => $v) {
@@ -461,12 +461,11 @@ class GenericResource {
    public function toArray()
    {
       $proto = Converter::toArray($this);
-      $not = array('primary_method', 'lastUpdate', 'subfunctions', 'client', 'path');
+      $not = array('primary_method', 'lastUpdate', 'subfunctions', 'client');
       // we only need key value
-      foreach (array_keys($proto) as $key) {
-      
-        if (is_object($proto[$key]) || in_array($key, $not)) {
-          unset($proto[$key]);
+      foreach ($proto as $k => $p) {
+        if (is_object($p) || in_array($k, $not)) {
+          unset($proto[$k]);
         }
       }
 
