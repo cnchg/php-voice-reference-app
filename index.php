@@ -157,8 +157,12 @@ try {
         // set with the incoming call event
         //
         // initial call
+        
         $otherCollection = new Catapult\CallCollection; 
-        $otherCall= $otherCollection->listAll(array("size" => 1000, "page" => 0))->find(array("to" => $answerCallEvent->to))->first();
+        // match our endpointURI and our PSTN
+        $otherCall= $otherCollection->listAll(array("size" => 1000, "page" => 0
+        ))->find(array("to" => $answerCallEvent->to, "from" => $user->endpoint->sipUri)
+        )->first();
       
         // use our other call id
         // in this bridging
