@@ -22,12 +22,11 @@
 // {your_server}.tld/callback/{username}
 // OR 
 // {your_server}.tld/users/
-// with headers "username={your_username}" "password={your_password}":
+// with POST "username={your_username}&password={your_password}":
 //
 // make sure you call /users/
 // before using the /callback/
 require_once(__DIR__."/config.php");
-require_once(__DIR__."/helpers.php");
 require_once(__DIR__."/create.php");
 
 try {
@@ -41,34 +40,45 @@ try {
   // this url is publicly accessible
   // optionally look for the auth 
   // 
-  if (isset($_REQUEST['username']) && isset($_REQUEST['password']) && !isset($_REQUEST['callback'])) {
-    $result = createIfNeeded($headers['username'], $headers['password']);
-    // when the result is false
-    // we should exit
-    // 
-    // as our SIP client was not setup properly
+  // 
+  // fix: only recognize POST methods
+  // on the creation of /users
+  if (!isset($_REQUEST['callback'])) {
+    $jsonInput = json_decode(file_get_contents("php://input"));
+    if (is_object($jsonInput)) {
+      if (isset($jsonInput->userName) && isset($jsonInput->password)) {
+        $result = createIfNeeded($jsonInput->userName, $jsonInput->password);
+        // when the result is false
+        // we should exit
+        // 
+        // as our SIP client was not setup properly
 
-    if (is_int($result) && $result == SIP_APPLICATION_SCRIPT_ERROR) {
-      // something is not right with our script
-      printf("Something went wrong in storing your user contents, make sure they are properly encoded, for more info please view", GITHUB_URL);
-    } elseif (is_int($result) && $result == SIP_APPLICATION_SERVER_ERROR) {
-      // something went wrong in one of the catapult requests
-      printf("SIP client was not setup correct, please change your credentials or view our docs at: %s", SIP_DOCS);
+        if (is_int($result) && $result == SIP_APPLICATION_SCRIPT_ERROR) {
+          // something is not right with our script
+          showError(sprintf("Something went wrong in storing your user contents, make sure they are properly encoded, for more info please view", GITHUB_URL));
+        } elseif (is_int($result) && $result == SIP_APPLICATION_USER_FOUND_WRONG_PASSWORD) {
+          showError(sprintf("The user %s was already registered this password is not correct", $headers['username']));
 
-    } elseif (is_int($result) && $result == SIP_APPLICATION_USER_FOUND_WRONG_PASSWORD) {
-      printf("The user %s was already registered this password is not correct", $headers['username']);
+        } elseif (is_int($result) && $result == SIP_APPLICATION_PHONE_NUMBER_NOT_FOUND) {
+          showError(sprintf("No phone numbers were found in area code: %s", DEFAULT_AREA_CODE));
 
-    } elseif (is_int($result) && $result == SIP_APPLICATION_PHONE_NUMBER_NOT_FOUND) {
-      printf("No phone numbers were found in area code: %s", DEFAULT_AREA_CODE);
+        } else {
+          // send our headers and information
+          // the creation was a success
+          //
+          //header("location: ");
+          
+          echo json_encode($result);
 
+        }
+      } else { 
+        showError("You have not set either userName or password in your JSON document");
+      }
     } else {
-      // send our headers and information
-      // the creation was a success
-      //
-      //header("location: ");
-      
-      echo json_encode($result);
-
+      // userName and password
+      // need to be provided
+      // we will warn here
+      showError("Content-type must be JSON ");
     }
   } else {
     // This segment handles
@@ -203,6 +213,12 @@ try {
         $newCall = new Catapult\Call(array(
           "from" => $otherNumber,
           "to" => $incomingCallEvent->to 
+        ));
+      } else {
+        // we can just patch our application
+        // as it was another attempt
+        $userApplication->patch(array(
+          "autoAnswer"=>TRUE
         ));
       }
     } 

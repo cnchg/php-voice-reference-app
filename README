@@ -73,11 +73,11 @@ Examples (using curl):
 
 Creating a user with a number
 
-curl -H 'username: my_username' -H 'password: my_password'  http://{server_url}/users/
+curl --data 'userName=my_username&password=my_password'  http://{server_url}/users
 
 listening to incoming calls
 
-curl -H http://{server_url}/callback/{username}
+curl http://{server_url}/callback/{username}
 
 Other Notes:
 

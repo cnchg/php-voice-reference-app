@@ -1,5 +1,6 @@
 <?php
 
+
 // SIP call processing using Bandwidth.com SIP
 //
 //
@@ -14,7 +15,7 @@
 // we can do this using our default domain
 
 /** add seperate applications for the user, with callbacks **/ 
-/** names should look like 'SIP Client Application [username]' **/
+/** names should look like 'SIP Client Application [userName]' **/
 define("DEFAULT_APPLICATION_NAME", "SIP Client Application ");
 define("DEFAULT_DOMAIN_NAME", "Default-Domain");
 define("DEFAULT_DOMAIN_DESCRIPTION", "a unique description");
@@ -33,7 +34,7 @@ define("DEFAULT_USERS_FILE", "users.json");
 define("DEFAULT_CONFIG_FILE", "config.php");
 
 require_once(__DIR__."/config.php");
-function createIfNeeded($username='', $password='', $domainName=DEFAULT_DOMAIN_NAME, $domainDescription=DEFAULT_DOMAIN_DESCRIPTION, $endpointDescription=DEFAULT_ENDPOINT_DESCRIPTION, $areaCode=DEFAULT_AREA_CODE, $applicationName=DEFAULT_APPLICATION_NAME) {
+function createIfNeeded($userName='', $password='', $domainName=DEFAULT_DOMAIN_NAME, $domainDescription=DEFAULT_DOMAIN_DESCRIPTION, $endpointDescription=DEFAULT_ENDPOINT_DESCRIPTION, $areaCode=DEFAULT_AREA_CODE, $applicationName=DEFAULT_APPLICATION_NAME) {
   try {
     $client = new Catapult\Client;
     $account = new Catapult\Account; 
@@ -43,7 +44,7 @@ function createIfNeeded($username='', $password='', $domainName=DEFAULT_DOMAIN_N
     //
     // TODO: currently supports a single user
     // this should be multiuser based
-    $newUser = addUserIfNeeded($username, $password);
+    $newUser = addUserIfNeeded($userName, $password);
     if ($newUser == SIP_APPLICATION_USER_CREATED) {
       // this means
       // our user was already
@@ -51,17 +52,17 @@ function createIfNeeded($username='', $password='', $domainName=DEFAULT_DOMAIN_N
       // 
       // subsequent request, we
       // can find all our data in users.json
-      return getUser($username); 
+      return getUser($userName); 
     } elseif ($newUser == SIP_APPLICATION_USER_FOUND_WRONG_PASSWORD) {
       // our additional request
       // was found with the wrong
-      // username, password
+      // userName, password
       return SIP_APPLICATION_USER_FOUND_WRONG_PASSWORD; 
     }
 
     // seperate the applicationName from the other
-    // users by username
-    $applicationName .= " [" . $username . "]";
+    // users by userName
+    $applicationName .= " [" . $userName . "]";
     $applications = new Catapult\ApplicationCollection;
     $applications = $applications->listAll(array("size" => 1000))->find(array(
        "name" => $applicationName
@@ -81,8 +82,8 @@ function createIfNeeded($username='', $password='', $domainName=DEFAULT_DOMAIN_N
         // page
         //
         // as we are using PHP_SELF
-        // add the username in our callback
-        "incomingCallUrl" => "http://" . $_SERVER{"HTTP_HOST"} . preg_replace("/index\.php/", "", $_SERVER{'PHP_SELF'} . sprintf("callback/%s", $username) ),
+        // add the userName in our callback
+        "incomingCallUrl" => "http://" . $_SERVER{"HTTP_HOST"} . preg_replace("/index\.php/", "", $_SERVER{'PHP_SELF'} . sprintf("callback/%s", $userName) ),
         "autoAnswer" => TRUE
       ));
     } else {
@@ -119,17 +120,17 @@ function createIfNeeded($username='', $password='', $domainName=DEFAULT_DOMAIN_N
       // we can do this by listing all
       // the endpoints for this domain
 
-      $endpoint = $domain->listEndpoints()->find(array("name"=>$username));
+      $endpoint = $domain->listEndpoints()->find(array("name"=>$userName));
       if ($endpoint->isEmpty()) {
         // here we create
         // the endpoint
 
         $endpoint = new Catapult\Endpoints($domain->id,array(
-          "name"=> $username, 
+          "name"=> $userName, 
           "applicationId" => $application->id,
           "description" => $endpointDescription,
           "credentials" => array(
-            "username" => $username,
+            "username" => $userName,
             "password" => $password
           )
         ));
@@ -151,10 +152,10 @@ function createIfNeeded($username='', $password='', $domainName=DEFAULT_DOMAIN_N
          "description" => $domainDescription
       ));
       $endpoint = new Catapult\Endpoints($domain->id,array(
-        "name"=> $username, 
+        "name"=> $userName, 
         "applicationId" => $application->id,
         "credentials" => array(
-          "username" => $username,
+          "userName" => $userName,
           "password" => $password
         )
       ));
@@ -188,7 +189,7 @@ function createIfNeeded($username='', $password='', $domainName=DEFAULT_DOMAIN_N
 
       // add a user to the
       // users.json
-      $addedUser = addUser($username, $password, $domain, $endpoint, $phoneNumber->number);
+      $addedUser = addUser($userName, $password, $domain, $endpoint, $phoneNumber->number);
       // only when we get a good
       // response we will return
       // otherwise bring back as file i/o warning
@@ -196,7 +197,7 @@ function createIfNeeded($username='', $password='', $domainName=DEFAULT_DOMAIN_N
         return array(
           "endpoint" => $endpoint->toArray(),
           "domain" => $domain->toArray(),
-          "number" => $phoneNumber->number
+          "phoneNumber" => $phoneNumber->number
         );
       }  
     } else {
@@ -211,9 +212,8 @@ function createIfNeeded($username='', $password='', $domainName=DEFAULT_DOMAIN_N
     // we should check
     
     $error = $e->getResult();
-    echo json_encode($error);     
-
-    return SIP_APPLICATION_SERVER_ERROR; 
+    // server errors will be handled
+    return $error;
   }
 
   // something went wrong
@@ -227,15 +227,15 @@ function createIfNeeded($username='', $password='', $domainName=DEFAULT_DOMAIN_N
 // this should validate the current password
 // 
 // accept the applicationId, default endpoint and our default number
-function addUserIfNeeded($username='', $password='', $domain=array(), $endpoint=array(), $defaultNumber='') {
+function addUserIfNeeded($userName='', $password='', $domain=array(), $endpoint=array(), $defaultNumber='') {
 
   $users = json_decode(file_get_contents(realpath("./users.json")));
   if (sizeof($users)>0) {
     foreach ($users as $user) {
-      if ($user->username == $username && md5($password) == $user->password) {
+      if ($user->userName == $userName && md5($password) == $user->password) {
         return 1;
       }
-      if ($user->username == $username) {
+      if ($user->userName == $userName) {
         // TODO we can wrap this around our exception 
 
         return SIP_APPLICATION_USER_FOUND_WRONG_PASSWORD; //same password was not provided, creating user was tried
@@ -249,15 +249,15 @@ function addUserIfNeeded($username='', $password='', $domain=array(), $endpoint=
 
 // add a user to our
 // endpoint records
-function addUser($username, $password, $domain=array(), $endpoint=array(), $defaultNumber) {
+function addUser($userName, $password, $domain=array(), $endpoint=array(), $defaultNumber) {
   $users = (array) json_decode(file_get_contents(realpath("./") . "/" . DIRECTORY_SEPARATOR . DEFAULT_USERS_FILE));
   // when we're null create
   // a new context
   $users[] = array(
     "uuid" => uniqid(true),
-    "username" => $username,
+    "userName" => $userName,
     "password" => md5($password),
-    "number" => $defaultNumber,
+    "phoneNumber" => $defaultNumber,
     "domain" => $domain->toArray(),
     "endpoint" => $endpoint->toArray()
   );
@@ -268,17 +268,24 @@ function addUser($username, $password, $domain=array(), $endpoint=array(), $defa
 // once we are authenticated, we can
 // use getUser, this should return all our
 // data without having to make, lookup catapult 
-function getUser($username='') {
+function getUser($userName='') {
   $users = json_decode(file_get_contents(realpath("./") . "/" . DEFAULT_USERS_FILE));
   if (sizeof($users) > 0) {
     foreach ($users as $user) {
-      if ($user->username == $username) {
+      if ($user->userName == $userName) {
         return $user;
       }
     }
   }
   // hardly possible, implementor mistake
   return null;
+}
+// show an error in json
+// so it can be parsed same way
+// as a success, this should
+// be only for client side errors
+function showError($msg) {
+  printf(json_encode(array("message" => $msg)));
 }
 
 ?>
