@@ -15,7 +15,7 @@
 // we can do this using our default domain
 
 /** add seperate applications for the user, with callbacks **/ 
-/** names should look like 'SIP Client Application [userName]' **/
+/** names should look like 'SIP Client Application [userName]' **/c
 define("DEFAULT_APPLICATION_NAME", "SIP Client Application ");
 define("DEFAULT_DOMAIN_NAME", "Default-Domain");
 define("DEFAULT_DOMAIN_DESCRIPTION", "a unique description");
@@ -83,7 +83,7 @@ function createIfNeeded($userName='', $password='', $domainName=DEFAULT_DOMAIN_N
         //
         // as we are using PHP_SELF
         // add the userName in our callback
-        "incomingCallUrl" => "http://" . $_SERVER{"HTTP_HOST"} . preg_replace("/\/.*/", "", $_SERVER{'PHP_SELF'} . sprintf("callback/%s", $userName) ),
+        "incomingCallUrl" => "http://" . $_SERVER{"HTTP_HOST"} . preg_replace("/\/.*/", "", $_SERVER{'PHP_SELF'}) . "/"  . sprintf("callback/%s", $userName),
         "autoAnswer" => TRUE
       ));
     } else {
