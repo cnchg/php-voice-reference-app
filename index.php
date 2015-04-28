@@ -69,7 +69,7 @@ try {
           //header("location: ");
        
           // don't reencode the server response 
-          if (is_array($result)) {
+          if (is_array($result) || is_object($result)) {
           echo json_encode($result);
           } else {
           echo $result;
