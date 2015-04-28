@@ -210,7 +210,7 @@ try {
         }
         // other number is
         // defined for this user in users.json
-        $otherNumber = $user->number;
+        $otherNumber = $user->phoneNumber;
 
         // using our other PSTN number
         // we can create a call to this 'to'
