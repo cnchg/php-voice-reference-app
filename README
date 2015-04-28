@@ -86,3 +86,8 @@ password will result in an error
 
 - when testing the server-to-client be sure to switch your application
 autoAnswer=False
+
+- this application will create an application for each user under the namespace,
+"SIP Client Application [username]" 
+
+- this application will only use one domain
