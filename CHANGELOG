@@ -11,7 +11,7 @@
 0.2.0
 -----------------------------------------------------------
 - add user based callbacks like:
-  HEADERS: username=a_username password=a_password
+  POST parameters: username=a_username password=a_password
   {server_url}/{users} 
   {server_url}/callback/{username}
   where each user will be stored in the users.json

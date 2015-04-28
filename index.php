@@ -41,8 +41,7 @@ try {
   // this url is publicly accessible
   // optionally look for the auth 
   // 
-  $headers = getallheaders();
-  if (isset($headers['username']) && isset($headers['password']) && !isset($_REQUEST['callback'])) {
+  if (isset($_REQUEST['username']) && isset($_REQUEST['password']) && !isset($_REQUEST['callback'])) {
     $result = createIfNeeded($headers['username'], $headers['password']);
     // when the result is false
     // we should exit
@@ -59,6 +58,9 @@ try {
     } elseif (is_int($result) && $result == SIP_APPLICATION_USER_FOUND_WRONG_PASSWORD) {
       printf("The user %s was already registered this password is not correct", $headers['username']);
 
+    } elseif (is_int($result) && $result == SIP_APPLICATION_PHONE_NUMBER_NOT_FOUND) {
+      printf("No phone numbers were found in area code: %s", DEFAULT_AREA_CODE);
+
     } else {
       // send our headers and information
       // the creation was a success
@@ -71,13 +73,13 @@ try {
   } else {
     // This segment handles
     // our callbacks these will
-    // only work once the application
+    // only work once the userApplication
     // has been setup
     //
     //
     // url should be as follows:
  
-    // https|http://{your_server}.tld/bandwidth-sip-application/callback/{username}
+    // https|http://{your_server}.tld/bandwidth-sip-userApplication/callback/{username}
     //
 
     // check which user
@@ -91,12 +93,13 @@ try {
 
     // Our two state events
     // these will both be used in creating
-    // this application
+    // this userApplication
     //
     // our answer which  listens
     // to registrar 
     
     $client = new Catapult\Client;
+    $userApplication = new Catapult\Application($user->endpoint->applicationId);
     $answerCallEvent = new Catapult\AnswerCallEvent;
     $incomingCallEvent = new Catapult\IncomingCallEvent;
     $speakCallEvent = new Catapult\SpeakCallEvent;
@@ -126,6 +129,9 @@ try {
           "voice" => "Kate",
           "sentence" => "Hello SIP client"
         ));
+        $userApplication->patch(array(
+          "autoAnswer"=>FALSE
+        ));
        } else {
 
         // handle our reverse flow
@@ -150,6 +156,9 @@ try {
         // we should
         // have a bridged
         // call  now
+        $userApplication->patch(array(
+          "autoAnswer"=>TRUE
+        ));
        } 
     }
     // handle our speak event
@@ -170,7 +179,7 @@ try {
     // handle incoming requests
     // NOTE:
     //
-    // this application will be autoAnswer by default
+    // this userApplication will be autoAnswer by default
     // in order to activate the sequence below
     // you will need to set autoAnswer = false
     //

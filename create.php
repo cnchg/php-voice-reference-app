@@ -168,7 +168,6 @@ function createIfNeeded($username='', $password='', $domainName=DEFAULT_DOMAIN_N
 
     // we can find out using the return value
     // of our initial user check
-<<<<<<< HEAD
     // try to find numbers in our default
     // area code
     $phoneNumbers = new Catapult\PhoneNumbers;
@@ -179,16 +178,7 @@ function createIfNeeded($username='', $password='', $domainName=DEFAULT_DOMAIN_N
     // check if we have any numbers 
     // no numbers should result in warning 
     if (!$phoneNumber->isEmpty()) {
-=======
-    $phoneNumber = $phoneNumbers->listLocal(array(
-      "areaCode" => $areaCode
-    ));
-    $phoneNumber->allocate(array(
-      "number" => $phoneNumber->number,
-      "applicationId" => $application->id
-    ));
->>>>>>> b3db5ea76aefbe5a5825df3a6bfb0912087d2836
-
+      
       // try to allocate the last found number
       $allocatingNumber = $phoneNumber->last();
       $phoneNumber = $phoneNumbers->allocate(array(
