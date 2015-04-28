@@ -15,7 +15,7 @@
 // we can do this using our default domain
 
 /** add seperate applications for the user, with callbacks **/ 
-/** names should look like 'SIP Client Application [userName]' **/c
+/** names should look like 'SIP Client Application [userName]' **/
 define("DEFAULT_APPLICATION_NAME", "SIP Client Application ");
 define("DEFAULT_DOMAIN_NAME", "Default-Domain");
 define("DEFAULT_DOMAIN_DESCRIPTION", "a unique description");
