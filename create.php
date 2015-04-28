@@ -193,11 +193,13 @@ function createIfNeeded($userName='', $password='', $domainName=DEFAULT_DOMAIN_N
       // only when we get a good
       // response we will return
       // otherwise bring back as file i/o warning
+      $endpointArray = $endpoint->toArray();
+      unset($endpointArray['domains']);
       if ($addedUser) {
         return array(
           "userName" => $userName,
           //"password" => $password,
-          "endpoint" => $endpoint->toArray(),
+          "endpoint" => $endpointArray,
           //"domain" => $domain->toArray(),
           "phoneNumber" => $phoneNumber->number
         );
@@ -277,8 +279,8 @@ function getUser($userName='') {
       if ($user->username == $userName) {
         unset($user->domain);
         unset($user->password);
-        unset($user->endpoint->domains);
         unset($user->uuid);
+        unset($user->endpoint->domains);
         return $user;
       }
     }

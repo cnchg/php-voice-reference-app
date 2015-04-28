@@ -144,9 +144,6 @@ try {
           "voice" => "Kate",
           "sentence" => "Hello SIP client"
         ));
-        $userApplication->patch(array(
-          "autoAnswer"=>FALSE
-        ));
        } else {
 
         // handle our reverse flow
@@ -161,18 +158,12 @@ try {
         //
         // initial call
         $otherCollection = new Catapult\CallCollection; 
-        $otherCall= $otherCollection->listAll()->find(array("to" => $answerCallEvent->to))->last();
+        $otherCall= $otherCollection->listAll()->find(array("to" => $answerCallEvent->to))->first();
       
         // use our other call id
         // in this bridging
         $bridge = new Catapult\Bridge(array(
           "callIds" => array($call->id, $otherCall->id)
-        ));
-        // we should
-        // have a bridged
-        // call  now
-        $userApplication->patch(array(
-          "autoAnswer"=>TRUE
         ));
        } 
     }
@@ -198,6 +189,7 @@ try {
     // in order to activate the sequence below
     // you will need to set autoAnswer = false
     //
+   
      if ($incomingCallEvent->isActive()) {
 
      $sip = new Catapult\SIP($incomingCallEvent->from);
@@ -219,13 +211,7 @@ try {
           "from" => $otherNumber,
           "to" => $incomingCallEvent->to 
         ));
-      } else {
-        // we can just patch our application
-        // as it was another attempt
-        $userApplication->patch(array(
-          "autoAnswer"=>TRUE
-        ));
-      }
+      } 
     } 
   }
 } catch (CatapultApiException $e) {
