@@ -163,38 +163,15 @@ function createIfNeeded($username='', $password='', $domainName=DEFAULT_DOMAIN_N
     // when an application already has a phone 
     // number this process is not needed 
 
-    $phoneNumbers = new Catapult\PhoneNumbers;
-    // when we already have a number for
-    // this application use that
-    $phoneNumbersColl = new Catapult\PhoneNumbersCollection;
-    $numbers = $phoneNumbersColl->listAll(array("size" => 1000));
-    $newNumber = true;
-    foreach ($numbers->get() as $number) {
-      // as of this application
-      // to get the application id
-      // we need to extract its id from the url
-      // {catapult_api_url}/applications/{id}
-      if (isset($number->application)) {
-        if (preg_match("/\/(a-.*)$/",$number->application, $m)) {
-          $applicationId = $m[1];
-          if ($applicationId == $application->id) {
-            $newNumber = false; 
-            $phoneNumber = $number;
-            break;
-          }
-        }
-      }
-    }
-    if ($newNumber) {
-
-      $phoneNumber = $phoneNumbers->listLocal(array(
-        "areaCode" => $areaCode
-      ))->last();
-      $phoneNumber->allocate(array(
-         "number" => $phoneNumber->number,
-         "applicationId" => $application->id
-      ));  
-    } 
+    // we can find out using the return value
+    // of our initial user check
+    $phoneNumber = $phoneNumbers->listLocal(array(
+      "areaCode" => $areaCode
+    ));
+    $phoneNumber->allocate(array(
+      "number" => $phoneNumber->number,
+      "applicationId" => $application->id
+    ));
 
     // create our user
     // only return succes on succesful file i/o
