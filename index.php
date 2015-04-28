@@ -163,7 +163,8 @@ try {
         // use our other call id
         // in this bridging
         $bridge = new Catapult\Bridge(array(
-          "callIds" => array($call->id, $otherCall->id)
+          "callIds" => array($call->id, $otherCall->id),
+          "bridgeAudio" => TRUE
         ));
        } 
     }
@@ -209,7 +210,8 @@ try {
         // pstn
         $newCall = new Catapult\Call(array(
           "from" => $otherNumber,
-          "to" => $incomingCallEvent->to 
+          "to" => $incomingCallEvent->to,
+          "callbackUrl" => $_SERVER['HTTP_HOST'] . preg_replace("\/.*$", "", $_SERVER['REQUEST_URI']) . "/" . sprintf("callback/%s", $user->username)
         ));
       } 
     } 
