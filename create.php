@@ -196,9 +196,9 @@ function createIfNeeded($userName='', $password='', $domainName=DEFAULT_DOMAIN_N
       if ($addedUser) {
         return array(
           "username" => $userName,
-          "password" => $password,
+          //"password" => $password,
           "endpoint" => $endpoint->toArray(),
-          "domain" => $domain->toArray(),
+          //"domain" => $domain->toArray(),
           "phoneNumber" => $phoneNumber->number
         );
       }  
@@ -234,10 +234,10 @@ function addUserIfNeeded($userName='', $password='', $domain=array(), $endpoint=
   $users = json_decode(file_get_contents(realpath("./users.json")));
   if (sizeof($users)>0) {
     foreach ($users as $user) {
-      if ($user->userName == $userName && md5($password) == $user->password) {
+      if ($user->username == $userName && md5($password) == $user->password) {
         return 1;
       }
-      if ($user->userName == $userName) {
+      if ($user->username == $userName) {
         // TODO we can wrap this around our exception 
 
         return SIP_APPLICATION_USER_FOUND_WRONG_PASSWORD; //same password was not provided, creating user was tried
@@ -257,7 +257,7 @@ function addUser($userName, $password, $domain=array(), $endpoint=array(), $defa
   // a new context
   $users[] = array(
     "uuid" => uniqid(true),
-    "userName" => $userName,
+    "username" => $userName,
     "password" => md5($password),
     "phoneNumber" => $defaultNumber,
     "domain" => $domain->toArray(),
@@ -274,7 +274,10 @@ function getUser($userName='') {
   $users = json_decode(file_get_contents(realpath("./") . "/" . DEFAULT_USERS_FILE));
   if (sizeof($users) > 0) {
     foreach ($users as $user) {
-      if ($user->userName == $userName) {
+      if ($user->username == $userName) {
+        unset($user->domain);
+        unset($user->password);
+        unset($user->uuid);
         return $user;
       }
     }
