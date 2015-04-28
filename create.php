@@ -13,7 +13,9 @@
 // has already been done or not.
 // we can do this using our default domain
 
-define("DEFAULT_APPLICATION_NAME", "Example: SIP Client Application");
+/** add seperate applications for the user, with callbacks **/ 
+/** names should look like 'SIP Client Application [username]' **/
+define("DEFAULT_APPLICATION_NAME", "SIP Client Application ");
 define("DEFAULT_DOMAIN_NAME", "Default-Domain2");
 define("DEFAULT_DOMAIN_DESCRIPTION", "a unique description");
 define("DEFAULT_ENDPOINT_DESCRIPTION", "a unique endpoint description");
@@ -26,6 +28,7 @@ define("SIP_APPLICATION_SERVER_ERROR", -2);
 define("SIP_APPLICATION_USER_CREATED", 1);
 define("SIP_APPLICATION_USER_NOT_FOUND", 0);
 define("SIP_APPLICATION_USER_FOUND_WRONG_PASSWORD", -3);
+define("SIP_APPLICATION_PHONE_NUMBER_NOT_FOUND", -4);
 define("DEFAULT_USERS_FILE", "users.json");
 define("DEFAULT_CONFIG_FILE", "config.php");
 
@@ -55,6 +58,10 @@ function createIfNeeded($username='', $password='', $domainName=DEFAULT_DOMAIN_N
       // username, password
       return SIP_APPLICATION_USER_FOUND_WRONG_PASSWORD; 
     }
+
+    // seperate the applicationName from the other
+    // users by username
+    $applicationName .= " [" . $username . "]";
     $applications = new Catapult\ApplicationCollection;
     $applications = $applications->listAll(array("size" => 1000))->find(array(
        "name" => $applicationName
@@ -153,60 +160,50 @@ function createIfNeeded($username='', $password='', $domainName=DEFAULT_DOMAIN_N
       ));
     }
     
-    // By now we should be able to create
-    // our default domain which is labeled
-    // according to our defaults
-
     // we now need to allocate one number
     // using our default area code
     // 
     // when an application already has a phone 
     // number this process is not needed 
 
+    // we can find out using the return value
+    // of our initial user check
+    // try to find numbers in our default
+    // area code
     $phoneNumbers = new Catapult\PhoneNumbers;
-    // when we already have a number for
-    // this application use that
-    $phoneNumbersColl = new Catapult\PhoneNumbersCollection;
-    $numbers = $phoneNumbersColl->listAll(array("size" => 1000));
-    $newNumber = true;
-    foreach ($numbers->get() as $number) {
-      // as of this application
-      // to get the application id
-      // we need to extract its id from the url
-      // {catapult_api_url}/applications/{id}
-      if (isset($number->application)) {
-        if (preg_match("/\/(a-.*)$/",$number->application, $m)) {
-          $applicationId = $m[1];
-          if ($applicationId == $application->id) {
-            $newNumber = false; 
-            $phoneNumber = $number;
-            break;
-          }
-        }
-      }
-    }
-    if ($newNumber) {
+    $phoneNumber = $phoneNumbers->listLocal(array(
+      "areaCode" => $areaCode
+    ));
+ 
+    // check if we have any numbers 
+    // no numbers should result in warning 
+    if (!$phoneNumber->isEmpty()) {
 
-      $phoneNumber = $phoneNumbers->listLocal(array(
-        "areaCode" => $areaCode
-      ))->last();
-      $phoneNumber->allocate(array(
-         "number" => $phoneNumber->number,
-         "applicationId" => $application->id
-      ));  
-    } 
+      // try to allocate the last found number
+      $allocatingNumber = $phoneNumber->last();
+      $phoneNumber = $phoneNumbers->allocate(array(
+        "number" =>  $allocatingNumber->number,
+        "applicationId" => $application->id
+      ));
 
-    // create our user
-    // only return succes on succesful file i/o
-    //
-    $addedUser = addUser($username, $password, $domain, $endpoint, $phoneNumber->number);
-
-    if ($addedUser) {
-      return array(
-        "endpoint" => $endpoint->toArray(),
-        "number" => $phoneNumber->number,
-        "domain" => $domain->toArray()
-      );
+      // add a user to the
+      // users.json
+      $addedUser = addUser($username, $password, $domain, $endpoint, $phoneNumber->number);
+      // only when we get a good
+      // response we will return
+      // otherwise bring back as file i/o warning
+      if ($addedUser) {
+        return array(
+          "endpoint" => $endpoint->toArray(),
+          "domain" => $domain->toArray(),
+          "number" => $phoneNumber->number
+        );
+      }  
+    } else {
+        // no numbers were
+        // found return
+        // 
+        return SIP_APPLICATION_PHONE_NUMBER_NOT_FOUND;
     }
 
   } catch (CatapultApiException $e) {
