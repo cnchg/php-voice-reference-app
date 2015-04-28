@@ -158,7 +158,7 @@ try {
         //
         // initial call
         $otherCollection = new Catapult\CallCollection; 
-        $otherCall= $otherCollection->listAll()->find(array("to" => $answerCallEvent->to))->first();
+        $otherCall= $otherCollection->listAll(array("size" => 1000, "page" => 0))->find(array("to" => $answerCallEvent->to))->first();
       
         // use our other call id
         // in this bridging
