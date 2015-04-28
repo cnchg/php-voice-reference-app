@@ -195,6 +195,8 @@ function createIfNeeded($userName='', $password='', $domainName=DEFAULT_DOMAIN_N
       // otherwise bring back as file i/o warning
       if ($addedUser) {
         return array(
+          "username" => $userName,
+          "password" => $password,
           "endpoint" => $endpoint->toArray(),
           "domain" => $domain->toArray(),
           "phoneNumber" => $phoneNumber->number
