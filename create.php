@@ -195,7 +195,7 @@ function createIfNeeded($userName='', $password='', $domainName=DEFAULT_DOMAIN_N
       // otherwise bring back as file i/o warning
       if ($addedUser) {
         return array(
-          "username" => $userName,
+          "userName" => $userName,
           //"password" => $password,
           "endpoint" => $endpoint->toArray(),
           //"domain" => $domain->toArray(),
@@ -257,7 +257,7 @@ function addUser($userName, $password, $domain=array(), $endpoint=array(), $defa
   // a new context
   $users[] = array(
     "uuid" => uniqid(true),
-    "username" => $userName,
+    "userName" => $userName,
     "password" => md5($password),
     "phoneNumber" => $defaultNumber,
     "domain" => $domain->toArray(),
