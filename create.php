@@ -16,7 +16,7 @@
 /** add seperate applications for the user, with callbacks **/ 
 /** names should look like 'SIP Client Application [username]' **/
 define("DEFAULT_APPLICATION_NAME", "SIP Client Application ");
-define("DEFAULT_DOMAIN_NAME", "Default-Domain2");
+define("DEFAULT_DOMAIN_NAME", "Default-Domain");
 define("DEFAULT_DOMAIN_DESCRIPTION", "a unique description");
 define("DEFAULT_ENDPOINT_DESCRIPTION", "a unique endpoint description");
 define("DEFAULT_AREA_CODE", "469");
