@@ -83,7 +83,7 @@ function createIfNeeded($userName='', $password='', $domainName=DEFAULT_DOMAIN_N
         //
         // as we are using PHP_SELF
         // add the userName in our callback
-        "incomingCallUrl" => "http://" . $_SERVER{"HTTP_HOST"} . preg_replace("/index\.php.*/", "", $_SERVER{'PHP_SELF'} . sprintf("callback/%s", $userName) ),
+        "incomingCallUrl" => "http://" . $_SERVER{"HTTP_HOST"} . preg_replace("/users\//", "", $_SERVER{'PHP_SELF'} . sprintf("callback/%s", $userName) ),
         "autoAnswer" => TRUE
       ));
     } else {
