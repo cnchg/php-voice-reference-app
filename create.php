@@ -259,7 +259,7 @@ function addUser($userName, $password, $domain=array(), $endpoint=array(), $defa
   // a new context
   $users[] = array(
     "uuid" => uniqid(true),
-    "userName" => $userName,
+    "username" => $userName,
     "password" => md5($password),
     "phoneNumber" => $defaultNumber,
     "domain" => $domain->toArray(),
