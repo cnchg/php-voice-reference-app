@@ -161,7 +161,7 @@ try {
         $otherCollection = new Catapult\CallCollection; 
         // match our endpointURI and our PSTN
         $otherCall= $otherCollection->listAll(array("size" => 1000, "page" => 0
-        ))->find(array("to" => $answerCallEvent->to, "from" => $user->endpoint->sipUri)
+        ))->find(array("from" => $user->endpoint->sipUri)
         )->first();
       
         // use our other call id
