@@ -16,7 +16,7 @@ try {
   // are proper json files
   $files = array( "users.json", "credentials.json");
   foreach ($files as $file) {
-    $obj = json_decode(file_get_contents(__DIR__ . $file));
+    $obj = json_decode(file_get_contents(__DIR__ . "/" . $file));
     if (!is_object($obj) && !is_array($obj)) {
       throw new Exception(sprintf("The file: %s is not properly encoded", $file));
     }
