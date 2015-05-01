@@ -94,7 +94,7 @@ try {
     //
     // url should be as follows:
  
-    // https|http://{your_server}.tld/bandwidth-sip-userApplication/callback/{username}
+    // https|http://{your_server}.tld/callback/{username}
     //
 
     // check which user
@@ -117,8 +117,6 @@ try {
     $answerCallEvent = new Catapult\AnswerCallEvent;
     $incomingCallEvent = new Catapult\IncomingCallEvent;
     $hangupCallEvent = new Catapult\HangupCallEvent;
-    $timeoutCallEvent = new Catapult\TimeoutCallEvent;
-    $errorCallEvent = new Catapult\ErrorCallEvent;
     // Standard execution:
     //
     // we need to check whether 
@@ -129,18 +127,9 @@ try {
     // as per our incoming and answer call
     // events
 
-    // say thank you
-    // this needs to 
-    // be an SIP endpoint
     if ($answerCallEvent->isActive()) {
        $sipOrPSTNTo = $answerCallEvent->to;
        $sipOrPSTNFrom = $answerCallEvent->from;
-       // while we check 
-       // if the call is going
-       // to the default endpoint
-       // our first check is sufficient
-       // for an sip client call
-
        // check whether this is coming 
        // from our pstn, if it is we need to 
        // bridge our calls
@@ -161,12 +150,12 @@ try {
           "bridgeAudio" => TRUE
         ));
        } 
+       // our sip is being called
        if ($sipOrPSTNTo == $user->endpoint->sipUri) {
 
           // get our last call
           // from the PSTN 
           //
-          // our event should be set
           $call = new Catapult\Call($answerCallEvent->callId);
           // get our last call
           // from the pstn and bridge
@@ -197,7 +186,8 @@ try {
    
      if ($incomingCallEvent->isActive()) {
 
-     $sipOrPSTN = $incomingCallEvent->from;
+     $sipOrPSTNFrom = $incomingCallEvent->from;
+     $sipOrPSTNTo = $incomingCallEvent->to;
      if ($sipOrPSTN == $user->endpoint->sipUri) {
         $call = new Catapult\Call($incomingCallEvent->callId);
         if ($call->state == Catapult\CALL_STATES::started) {
@@ -212,7 +202,11 @@ try {
           "to" => $incomingCallEvent->to,
           "callbackUrl" => $_SERVER['HTTP_HOST'] . preg_replace("/\/.*$/", "", $_SERVER['REQUEST_URI']) . "/" . sprintf("callback/%s", $user->username)
         ));
-      } elseif ($sipOrPSTN == $user->phoneNumber) {
+      } 
+
+      // a PSTN has called this catapult
+      // number, bridge with sip
+      if ($sipOrPSTNTo == $user->phoneNumber) {
         $call = new Catapult\Call($incomingCallEvent->callId);
         if ($call->state == Catapult\CALL_STATES::started) {
           $call->accept();
@@ -221,7 +215,7 @@ try {
         $call = new Catapult\Call(array(
           "from" => $user->phoneNumber,
           "to" => $user->endpoint->sipUri,
-          "callbackUrl" => $_SERVER['HTTP_HOST'] . preg_replace("/\/.*$", "", $_SERVER['REQUEST_URI']) . "/" . sprintf("callback/%s", $user->username)
+          "callbackUrl" => $_SERVER['HTTP_HOST'] . preg_replace("/\/.*$/", "", $_SERVER['REQUEST_URI']) . "/" . sprintf("callback/%s", $user->username)
         ));
       } 
     }
@@ -234,8 +228,8 @@ try {
       $SIPCollection = new Catapult\CallCollection;
       // match both ways for
       // both
-      $PSTNCollection->listAll()->find(array("from" => $user->phoneNumber, "to" => $user->phoneNumber));
-      $SIPCollection->listAll()->find(array("from" => $user->endpoint->sipUri, "to" => $user->endpoint->sipUri));
+      $PSTNCollection->listAll()->find(array("from" => $user->phoneNumber));
+      $SIPCollection->listAll()->find(array("from" => $user->endpoint->sipUri));
      
       $merged = array_merge($PSTNCollection->get(), $SIPCollection->get());  
       foreach ($merged as $call) {
