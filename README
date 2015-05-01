@@ -78,16 +78,8 @@ Outbound:
 initiate a call using your SIP endpoint to an outside PSTN number
 
 
-More:
-----------------------------------------------------------------
-
-this application is made for single term use and will act on behalf of end users,
-as a result you can call it multiple times with different credentials each
-having its own domain and endpoint outputted. Your endpoint will need an application
-id as this will bind all the Catapult events to it.
-
-Other Notes:
-
+Other Notes
+---------------------------------------------------------------------------------------
 - username can be created once, subsequent requests with the same username and different
 password will result in an error
 
