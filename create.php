@@ -30,6 +30,8 @@ define("SIP_APPLICATION_USER_CREATED", 1);
 define("SIP_APPLICATION_USER_NOT_FOUND", 0);
 define("SIP_APPLICATION_USER_FOUND_WRONG_PASSWORD", -3);
 define("SIP_APPLICATION_PHONE_NUMBER_NOT_FOUND", -4);
+define("SIP_APPLICATION_CALL_INCOMING", "INCOMING");
+define("SIP_APPLICATION_CALL_OUTGOING", "OUTGOING");
 define("DEFAULT_USERS_FILE", "users.json");
 define("DEFAULT_CONFIG_FILE", "config.php");
 
@@ -193,13 +195,11 @@ function createIfNeeded($userName='', $password='', $domainName=DEFAULT_DOMAIN_N
       // only when we get a good
       // response we will return
       // otherwise bring back as file i/o warning
-      $endpointArray = $endpoint->toArray();
-      unset($endpointArray['domains']);
       if ($addedUser) {
         return array(
           "userName" => $userName,
           //"password" => $password,
-          "endpoint" => $endpointArray,
+          "endpoint" => $endpoint->toArray(),
           //"domain" => $domain->toArray(),
           "phoneNumber" => $phoneNumber->number
         );
@@ -277,11 +277,7 @@ function getUser($userName='') {
   if (sizeof($users) > 0) {
     foreach ($users as $user) {
       if ($user->username == $userName) {
-        unset($user->domain);
-        unset($user->password);
-        unset($user->uuid);
-        unset($user->endpoint->domains);
-        return $user;
+        return unsetVars($users);
       }
     }
   }
