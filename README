@@ -79,7 +79,7 @@ initiate a call using your SIP endpoint to an outside PSTN number
 
 
 Other Notes
----------------------------------------------------------------------------------------
+----------------------------------------------------------------
 - username can be created once, subsequent requests with the same username and different
 password will result in an error
 
