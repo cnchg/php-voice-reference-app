@@ -147,16 +147,16 @@ try {
         // bridge
         // the sip
         // calls
-        $thisCall = new Catapult\Call($answerCallEvent->callId);
+        $call = new Catapult\Call($answerCallEvent->callId);
         $callCollection = new Catapult\CallCollection;
         // find our opposite direction
         //
-        $lastSIPCall = $callCollection->listAll(array("size" => 1000, "page" => 0))->find(array("to" => $user->endpoint->sipUri))->first();
+        $lastSIPCall = $callCollection->listAll(array("size" => 1000, "page" => 0))->find(array("from" => $user->endpoint->sipUri))->first();
         
         // now bridge these
         // two
         $bridge = new Catapult\Bridge(array(
-          "callIds" => array($thisCall->id, $lastSIPCall->id),
+          "callIds" => array($call->id, $lastSIPCall->id),
           "bridgeAudio" => TRUE
         ));
        } elseif ($phoneNumber == $user->endpoint->sipUri) {
@@ -169,14 +169,14 @@ try {
           // get our last call
           // from the pstn and bridge
           $callCollection = new Catapult\CallCollection;
-          $thisCall = new Catapult\Call($answerCallEvent->callId);
+          $call = new Catapult\Call($answerCallEvent->callId);
           $lastPSTNCall = $callCollection->listAll(array("size" => 1000, "page" => 0))->find(array("to" => $user->phoneNumber))->first();
  
           // bridge our incoming and 
           // outgoing calls
           //
           $bridge = new Catapult\Bridge(array(
-            "callIds" => array($thisCall->id, $lastPSTNCall->id),
+            "callIds" => array($call->id, $lastPSTNCall->id),
             "bridgeAudio" => TRUE
           ));
         } 
@@ -200,15 +200,12 @@ try {
         if ($call->state == Catapult\CALL_STATES::started) {
           $call->accept();
         }
-        // other number is
-        // defined for this user in users.json
-        $otherNumber = $user->phoneNumber;
-
+        
         // using our other PSTN number
         // we can create a call to this 'to'
         // pstn
         $newCall = new Catapult\Call(array(
-          "from" => $otherNumber,
+          "from" => $user->phoneNumber,
           "to" => $incomingCallEvent->to,
           "callbackUrl" => $_SERVER['HTTP_HOST'] . preg_replace("/\/.*$/", "", $_SERVER['REQUEST_URI']) . "/" . sprintf("callback/%s", $user->username)
         ));
@@ -217,9 +214,9 @@ try {
         // forward to sip
         //
         //
-        $thisCall = new Catapult\Call($incomingCallEvent->callId);
-        if ($thisCall->state == Catapult\CALL_STATES::started) {
-          $thisCall->accept();
+        $call = new Catapult\Call($incomingCallEvent->callId);
+        if ($call->state == Catapult\CALL_STATES::started) {
+          $call->accept();
         }
 
         $call = new Catapult\Call(array(
@@ -233,6 +230,24 @@ try {
         ));
       } 
     }
+
+    // on hangup, deal with each call from 
+    // PSTN and SIP
+    // make no assertions whether we're in inbound or outbound mode
+    if ($hangupCallEvent->isActive()) {
+      $PSTNcollection = new Catapult\CallCollection;
+      $SIPCollection = new Catapult\CallCollection;
+      $PSTNCollection->listAll(array("size" => 1000, "page" => 0))->find(array("from" => $user->phoneNumber, "to" => $user->phoneNumber));
+      $SIPCollection->listAll(array("size" => 1000, "page" => 0))->find(array("from" => $user->endpoint->sipUri, "to" => $user->endpoint->sipUri));
+     
+      $merged = array_merge($PSTNCollection->get(), $SIPCollection->get());  
+      foreach ($merged as $call) {
+        if ($call->state == Catapult\CALL_STATES::active) {
+          $call->hangup();
+        }
+      }
+    }
+
   }
 } catch (CatapultApiException $e) {
   $error = $e->getResult();
