@@ -61,6 +61,13 @@ Your application should now be viewable as my-sip-applicaiton.herokuapp.com
 How to use
 -----------------------------------------------------------------
 
+Before using you will need to create a user, which can be done as follows:
+curl -H "Content-Type: application/json" -d '{"userName": "aUsername", "password": "aPassword" }' http://{server_url}/users  
+
+if all goes well you will receive a json response with your
+newly created user
+
+
 Using this application can be done two ways:
   
 Inbound:
@@ -77,17 +84,6 @@ as a result you can call it multiple times with different credentials each
 having its own domain and endpoint outputted. Your endpoint will need an application
 id as this will bind all the Catapult events to it.
 
-
-Examples (using curl):
-
-Creating a user with a number
-
-curl --data '{ "userName": "myUsername", "password": "myPassword" }'  http://{server_url}/users
-
-listening to incoming calls
-
-curl http://{server_url}/callback/{username}
-
 Other Notes:
 
 - username can be created once, subsequent requests with the same username and different
@@ -97,3 +93,4 @@ password will result in an error
 "SIP Client Application [username]" 
 
 - this application will only use one domain
+
