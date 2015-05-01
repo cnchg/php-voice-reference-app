@@ -1,10 +1,8 @@
 Bandwidth SIP Call registration
 =======================================================================
 
-This application implements the guide here:
-http://ap.bandwidth.com/docs/how-to-guides/use-endpoints-make-receive-calls-sip-clients/
+This application implements 2 way SIP-PSTN call flow
 (using PHP catapult)
-
 
 What you will need:
 
@@ -54,9 +52,22 @@ make sure your webserver config is using the attached .htaccess file
 commands:
 
   heroku create "my-sip-application"
+  
+  {add and commit}
   git push heroku master
 
 Your application should now be viewable as my-sip-applicaiton.herokuapp.com
+
+
+How to use
+-----------------------------------------------------------------
+
+Using this application can be done two ways:
+  
+Inbound:
+initiate a call using a PSTN number (not the one you registered with)
+Outbound:
+initiate a call using your SIP endpoint
 
 
 More:
@@ -65,15 +76,14 @@ More:
 this application is made for single term use and will act on behalf of end users,
 as a result you can call it multiple times with different credentials each
 having its own domain and endpoint outputted. Your endpoint will need an application
-id as this will bind all the Catapult events to it, for best use case
-it is good to make a seperate application just for this program
+id as this will bind all the Catapult events to it.
 
 
 Examples (using curl):
 
 Creating a user with a number
 
-curl --data 'userName=my_username&password=my_password'  http://{server_url}/users
+curl --data '{ "userName": "myUsername", "password": "myPassword" }'  http://{server_url}/users
 
 listening to incoming calls
 
@@ -83,9 +93,6 @@ Other Notes:
 
 - username can be created once, subsequent requests with the same username and different
 password will result in an error
-
-- when testing the server-to-client be sure to switch your application
-autoAnswer=False
 
 - this application will create an application for each user under the namespace,
 "SIP Client Application [username]" 
