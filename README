@@ -62,6 +62,8 @@ How to use
 -----------------------------------------------------------------
 
 Before using you will need to create a user, which can be done as follows:
+  
+  
 curl -H "Content-Type: application/json" -d '{"userName": "aUsername", "password": "aPassword" }' http://{server_url}/users  
 
 if all goes well you will receive a json response with your
