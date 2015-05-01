@@ -133,7 +133,8 @@ try {
     // this needs to 
     // be an SIP endpoint
     if ($answerCallEvent->isActive()) {
-       $sipOrPSTN = $answerCallEvent->to;
+       $sipOrPSTNTo = $answerCallEvent->to;
+       $sipOrPSTNFrom = $answerCallEvent->from;
        // while we check 
        // if the call is going
        // to the default endpoint
@@ -143,7 +144,7 @@ try {
        // check whether this is coming 
        // from our pstn, if it is we need to 
        // bridge our calls
-       if ($sipOrPSTN == $user->phoneNumber) {
+       if ($sipOrPSTNFrom == $user->phoneNumber) {
         // bridge
         // the sip
         // calls
@@ -151,7 +152,7 @@ try {
         $callCollection = new Catapult\CallCollection;
         // find our opposite direction
         //
-        $lastSIPCall = $callCollection->listAll(array("size" => 1000, "page" => 0))->find(array("from" => $user->endpoint->sipUri))->first();
+        $lastSIPCall = $callCollection->listAll()->find(array("from" => $user->endpoint->sipUri))->first();
         
         // now bridge these
         // two
@@ -159,7 +160,8 @@ try {
           "callIds" => array($call->id, $lastSIPCall->id),
           "bridgeAudio" => TRUE
         ));
-       } elseif ($phoneNumber == $user->endpoint->sipUri) {
+       } 
+       if ($sipOrPSTNTo == $user->endpoint->sipUri) {
 
           // get our last call
           // from the PSTN 
@@ -170,7 +172,7 @@ try {
           // from the pstn and bridge
           $callCollection = new Catapult\CallCollection;
           $call = new Catapult\Call($answerCallEvent->callId);
-          $lastPSTNCall = $callCollection->listAll(array("size" => 1000, "page" => 0))->find(array("to" => $user->phoneNumber))->first();
+          $lastPSTNCall = $callCollection->listAll()->find(array("to" => $user->phoneNumber))->first();
  
           // bridge our incoming and 
           // outgoing calls
@@ -189,13 +191,14 @@ try {
     // in order to activate the sequence below
     // you will need to set autoAnswer = false
     //
+    // IMPORTANT
+    // our callback url must be able
+    // to detect subdomains
    
      if ($incomingCallEvent->isActive()) {
 
      $sipOrPSTN = $incomingCallEvent->from;
      if ($sipOrPSTN == $user->endpoint->sipUri) {
-       // good, we can answer our 
-       // call
         $call = new Catapult\Call($incomingCallEvent->callId);
         if ($call->state == Catapult\CALL_STATES::started) {
           $call->accept();
@@ -210,10 +213,6 @@ try {
           "callbackUrl" => $_SERVER['HTTP_HOST'] . preg_replace("/\/.*$/", "", $_SERVER['REQUEST_URI']) . "/" . sprintf("callback/%s", $user->username)
         ));
       } elseif ($sipOrPSTN == $user->phoneNumber) {
-        // on incoming call
-        // forward to sip
-        //
-        //
         $call = new Catapult\Call($incomingCallEvent->callId);
         if ($call->state == Catapult\CALL_STATES::started) {
           $call->accept();
@@ -221,10 +220,6 @@ try {
 
         $call = new Catapult\Call(array(
           "from" => $user->phoneNumber,
-          // use a tag in figuring out
-          // whether our call is incoming
-          // or outoing, more on tags
-          //
           "to" => $user->endpoint->sipUri,
           "callbackUrl" => $_SERVER['HTTP_HOST'] . preg_replace("/\/.*$", "", $_SERVER['REQUEST_URI']) . "/" . sprintf("callback/%s", $user->username)
         ));
@@ -237,8 +232,10 @@ try {
     if ($hangupCallEvent->isActive()) {
       $PSTNcollection = new Catapult\CallCollection;
       $SIPCollection = new Catapult\CallCollection;
-      $PSTNCollection->listAll(array("size" => 1000, "page" => 0))->find(array("from" => $user->phoneNumber, "to" => $user->phoneNumber));
-      $SIPCollection->listAll(array("size" => 1000, "page" => 0))->find(array("from" => $user->endpoint->sipUri, "to" => $user->endpoint->sipUri));
+      // match both ways for
+      // both
+      $PSTNCollection->listAll()->find(array("from" => $user->phoneNumber, "to" => $user->phoneNumber));
+      $SIPCollection->listAll()->find(array("from" => $user->endpoint->sipUri, "to" => $user->endpoint->sipUri));
      
       $merged = array_merge($PSTNCollection->get(), $SIPCollection->get());  
       foreach ($merged as $call) {
