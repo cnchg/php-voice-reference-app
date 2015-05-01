@@ -47,7 +47,6 @@ Heroku
 ---------------------------------------------------------------
 
 you can deploy this on heroku using the attached procfile,
-make sure your webserver config is using the attached .htaccess file
 
 commands:
 
