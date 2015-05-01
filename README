@@ -65,9 +65,9 @@ How to use
 Using this application can be done two ways:
   
 Inbound:
-initiate a call using a PSTN number (not the one you registered with)
+initiate a call to your Catapult number using an outside PSTN number
 Outbound:
-initiate a call using your SIP endpoint
+initiate a call using your SIP endpoint to an outside PSTN number
 
 
 More:
