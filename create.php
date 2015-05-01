@@ -259,7 +259,7 @@ function addUser($userName, $password, $domain=array(), $endpoint=array(), $defa
   // a new context
   $users[] = array(
     "uuid" => uniqid(true),
-    "username" => $userName,
+    "userName" => $userName,
     "password" => md5($password),
     "phoneNumber" => $defaultNumber,
     "domain" => $domain->toArray(),
@@ -276,8 +276,12 @@ function getUser($userName='') {
   $users = json_decode(file_get_contents(realpath("./") . "/" . DEFAULT_USERS_FILE));
   if (sizeof($users) > 0) {
     foreach ($users as $user) {
-      if ($user->username == $userName) {
-        return unsetVars($users);
+      if ($user->userName == $userName) {
+        unset($user->password);
+        unset($user->domain);
+        unset($user->uuid);
+        
+        return $user;
       }
     }
   }
