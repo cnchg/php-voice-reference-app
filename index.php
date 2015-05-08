@@ -188,7 +188,7 @@ try {
 
      $sipOrPSTNFrom = $incomingCallEvent->from;
      $sipOrPSTNTo = $incomingCallEvent->to;
-     if ($sipOrPSTN == $user->endpoint->sipUri) {
+     if ($sipOrPSTNFrom == $user->endpoint->sipUri) {
         $call = new Catapult\Call($incomingCallEvent->callId);
         if ($call->state == Catapult\CALL_STATES::started) {
           $call->accept();
@@ -224,7 +224,7 @@ try {
     // PSTN and SIP
     // make no assertions whether we're in inbound or outbound mode
     if ($hangupCallEvent->isActive()) {
-      $PSTNcollection = new Catapult\CallCollection;
+      $PSTNCollection = new Catapult\CallCollection;
       $SIPCollection = new Catapult\CallCollection;
       // match both ways for
       // both
