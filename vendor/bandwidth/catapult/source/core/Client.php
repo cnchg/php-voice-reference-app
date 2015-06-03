@@ -305,12 +305,10 @@ final class Client {
 
       /* branch seperatly as POST may need GET parameters */
       if ($method == "GET" || $mixed) {
-        $params = "";
-        if (sizeof($data)>0) {
-         $params = "?" . http_build_query($data);
-        }
+        $params = "?" . http_build_query($data);
         $url .= $params;
       }
+
       curl_setopt($this->hndl, CURLOPT_URL, $url);
 
       /* setup auth */
@@ -333,7 +331,9 @@ final class Client {
       }
 
       /* add support for header only responses where information is only found in "location" */
+
       /* in some cases we need the raw content (Media Files) */
+
       if (isset($headers['Content-Type']) && in_array($headers['Content-Type'], self::$media_formats)) {
         return $noformat;
       }
@@ -351,7 +351,7 @@ final class Client {
 
       /* a 200s status for a succesful request */     
       if (!($code >= 200 && $code <= 299))
-        throw new \CatapultApiException(json_encode($res));
+        throw new \CatapultApiException("Request was brought back with error => " . json_encode($res));
 
       /* should be either blank (when a successful post) or a json object */
       if (!(is_object($res) || is_array($res) || $res == ""))

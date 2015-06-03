@@ -23,8 +23,8 @@ final class Application extends GenericResource {
      * Application(array)
      * Application()
      */
-    public function __construct() {
-      $data = Ensure::Input(func_get_args());
+    public function __construct($data=null) {
+      $data = Ensure::Input($data);
         parent::_init($data, new DependsResource,
         new LoadsResource(
           array("primary" => "GET", "id" => "id", "silent" => false, "init" => array())
@@ -48,10 +48,7 @@ final class Application extends GenericResource {
     */
     public function patch($data)
     {
-      $data = Ensure::Input($data);
-      $this->client->post($this->path . "/" . $this->id, $data->get());
-      // reload after recreating
-      return Constructor::make($this, array("id" => $this->id), TRUE);
+      return parent::create($data);	
     }
 } 
 

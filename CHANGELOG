@@ -15,3 +15,8 @@
   {server_url}/{users} 
   {server_url}/callback/{username}
   where each user will be stored in the users.json
+
+0.2.1
+-----------------------------------------------------------
+- load php-bandwidth from vendor/autoload only
+composer.lock will be pre-bundled

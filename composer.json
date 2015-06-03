@@ -6,8 +6,7 @@
   "homepage": "https://github.com/BandwidthExamples/php-voice-reference-app",
   "reference": "v0.2.0",
   "require": {
-    "php": "5.5.20",
-    "bandwidth/catapult": "0.8.*"
+    "bandwidth/catapult": "0.8.0"
    },
   "authors": [{
         "name": "Nadir Hamid",
