@@ -36,10 +36,26 @@ define("DEFAULT_USERS_FILE", "users.json");
 define("DEFAULT_CONFIG_FILE", "config.php");
 
 require_once(__DIR__."/config.php");
+
+if (defined('ENVIRONMENT') && ENVIRONMENT != "prod") {
+	Catapult\RESTClient::endpoint("https://api." . ENVIRONMENT . ".catapult.inetwork.com");
+}
+
+// returns a callback URL for a given $userName
+function callbackURL($user) {
+  return "http" . (($_SERVER['HTTPS'] == 'on') ? "s://" : "://") . $_SERVER["HTTP_HOST"] . str_replace("calldemo.php", "callback.php", $_SERVER['PHP_SELF']) . "?user=" . urlencode($user);
+}
+
+// create a user if needed
 function createIfNeeded($userName='', $password='', $domainName=DEFAULT_DOMAIN_NAME, $domainDescription=DEFAULT_DOMAIN_DESCRIPTION, $endpointDescription=DEFAULT_ENDPOINT_DESCRIPTION, $areaCode=DEFAULT_AREA_CODE, $applicationName=DEFAULT_APPLICATION_NAME) {
   try {
     $client = new Catapult\Client;
-    $account = new Catapult\Account; 
+    $account = new Catapult\Account;
+
+    // generate a random password (6~10 chars) if one is not provided
+    if ($password == null) {
+        $password = substr(str_shuffle("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"), 0, mt_rand(6, 10));
+    }
 
     // first let's retrieve or create
     // a new application
@@ -62,7 +78,7 @@ function createIfNeeded($userName='', $password='', $domainName=DEFAULT_DOMAIN_N
       return SIP_APPLICATION_USER_FOUND_WRONG_PASSWORD; 
     }
 
-    // seperate the applicationName from the other
+    // separate the applicationName from the other
     // users by userName
     $applicationName .= " [" . $userName . "]";
     $applications = new Catapult\ApplicationCollection;
@@ -80,12 +96,12 @@ function createIfNeeded($userName='', $password='', $domainName=DEFAULT_DOMAIN_N
         "name" => $applicationName, 
         "callbackHttpMethod" => "POST",
         // our callbacks will
-        // be triggered to this
-        // page
+        // be triggered to the
+        // callback.php page
         //
         // as we are using PHP_SELF
         // add the userName in our callback
-        "incomingCallUrl" => "http://" . $_SERVER{"HTTP_HOST"} . preg_replace("/\/.*/", "", $_SERVER{'PHP_SELF'}) . "/"  . sprintf("callback/%s", $userName),
+        "incomingCallUrl" => callbackURL($userName),
         "autoAnswer" => TRUE
       ));
     } else {
@@ -157,7 +173,7 @@ function createIfNeeded($userName='', $password='', $domainName=DEFAULT_DOMAIN_N
         "name"=> $userName, 
         "applicationId" => $application->id,
         "credentials" => array(
-          "userName" => $userName,
+          "username" => $userName,
           "password" => $password
         )
       ));
@@ -269,6 +285,7 @@ function addUser($userName, $password, $domain=array(), $endpoint=array(), $defa
   // make sure we specify our result
   return $res;
 }
+
 // once we are authenticated, we can
 // use getUser, this should return all our
 // data without having to make, lookup catapult 
@@ -288,6 +305,26 @@ function getUser($userName='') {
   // hardly possible, implementor mistake
   return null;
 }
+
+// create a new auth token
+// for the given domain and endpoint
+function createAuthToken($domainID, $endpointID) {
+  try {
+    // convert input to an object
+    $Endpoint = new Catapult\Endpoints($domainID, $endpointID);
+
+    // create a new auth token and return it
+    return $Endpoint->createAuthToken();
+  } catch (CatapultApiException $e) {
+    // something happened
+    // we should check
+
+    $error = $e->getResult();
+    // server errors will be handled
+    return $error;
+  }
+}
+
 // show an error in json
 // so it can be parsed same way
 // as a success, this should
@@ -295,5 +332,3 @@ function getUser($userName='') {
 function showError($msg) {
   printf(json_encode(array("message" => $msg)));
 }
-
-?>
