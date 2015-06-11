@@ -9,10 +9,19 @@ if (empty($_GET['user'])) {
 }
 
 // load needed functions
-require_once(__DIR__."/create.php");
+require_once(__DIR__."/helpers.php");
+
+// debug
+$file = false;
+function debug($message) {
+    global $file;
+    if ($file === false)
+        $file = fopen('debug.log', 'a');
+    fwrite($file, $message."\n\n");
+}
 
 // load user
-$User = getUser($_GET['user']);
+$User = getUser($_GET['user'], false);
 
 // initialize objects
 $client = new Catapult\Client;
@@ -27,62 +36,33 @@ if (empty($event->eventType)) {
 // set callback URL
 $callbackUrl = callbackURL($User->userName);
 
-switch ($event->eventType) {
-  case "incomingcall":
+debug("User: " . json_encode($User));
+debug("Event: " . json_encode($event));
+
+// We only need to act on the answer event
+if ($event->eventType == 'answer') {
+  // Only the 1st leg doesn't have a tag
+  if (empty($event->tag)) {
     if ($User->phoneNumber == $event->to) {
       // incoming call
-      //debug("Handle incoming call: call to sip %s", user.endpoint.sipUri);
-      return new Catapult\Call(array(
-        "from" => $User->phoneNumber,
-        "to" => $User->endpoint->sipUri,
-        "callbackUrl" => $callbackUrl,
-        "tag" => $event->callId
+      debug("Handle incoming call: call to sip " . $User->endpoint->sipUri);
+      $Call = new Catapult\Call($event->callId);
+      return $Call->transfer($User->endpoint->sipUri, array(
+        'transferCallerId' => $event->from,
+        'callbackUrl' => $callbackUrl,
+        'tag' => 'transferred'
       ));
     }
     if (strpos($User->endpoint->sipUri, trim($event->from)) !== false) {
       // outgoing call
-      //debug("Handle outgoing call: call to  %s", $event->to);
-      return new Catapult\Call(array(
-        "from" => $User->phoneNumber,
-        "to" => $event->to,
-        "callbackUrl" => $callbackUrl,
-        "tag" => $event->callId
+      debug("Handle outgoing sip call: call to " . $event->to);
+      $Call = new Catapult\Call($event->callId);
+      return $Call->transfer($event->to, array(
+        'transferCallerId' => $event->from,
+        'callbackUrl' => $callbackUrl,
+        'tag' => 'transferred'
       ));
     }
-    break;
-  case "answer":
-    if (!$event->tag) {
-      break;
-    }
-    $Call = new Catapult\Call($event->tag);
-    if ($Call->bridgeId) {
-      break;
-    } elseif($Call->state != "active") {
-      $Call->accept();
-    }
-    $Call->bridgeWith($event->callId);
-      /*.then(function(bridge) {
-        bridges[$event->callId] = bridge.id;
-        bridges[$event->tag] = bridge.id;
-      });*/
-    break;
-  /*case "hangup":
-    var bridgeId = bridges[$event->callId];
-    if (!bridgeId) {
-      return Promise.resolve();
-    }
-    return Bridge.get(bridgeId)
-      .then(function(bridge) {
-        return bridge.getCalls();
-      })
-      .then(function(calls) {
-        return Promise.all(calls.map(function(c) {
-          delete bridges[c.id];
-          if (c.state === "active") {
-            debug("Hangup another call");
-            return c.hangUp();
-          }
-        }));
-      });
-    break;*/
+  }
+  debug("Nothing to do!");
 }
