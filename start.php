@@ -26,4 +26,3 @@ try {
 } catch ( CatapultApiException $e) {
   printf("Error: You  need to set up your credentials..");
 }
-

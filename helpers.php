@@ -17,7 +17,6 @@
 /** add seperate applications for the user, with callbacks **/ 
 /** names should look like 'SIP Client Application [userName]' **/
 define("DEFAULT_APPLICATION_NAME", "SIP Client Application ");
-define("DEFAULT_DOMAIN_NAME", "Default-Domain");
 define("DEFAULT_DOMAIN_DESCRIPTION", "a unique description");
 define("DEFAULT_ENDPOINT_DESCRIPTION", "a unique endpoint description");
 define("DEFAULT_AREA_CODE", "469");
@@ -36,17 +35,33 @@ define("DEFAULT_USERS_FILE", "users.json");
 define("DEFAULT_CONFIG_FILE", "config.php");
 
 require_once(__DIR__."/config.php");
+
+if (defined('ENVIRONMENT') && ENVIRONMENT != "prod") {
+    Catapult\RESTClient::endpoint("https://api." . ENVIRONMENT . ".catapult.inetwork.com");
+}
+
+// returns a callback URL for a given $userName
+function callbackURL($user) {
+  return "http" . (($_SERVER['HTTPS'] == 'on') ? "s://" : "://") . $_SERVER["HTTP_HOST"] . str_replace("calldemo.php", "callback.php", $_SERVER['PHP_SELF']) . "?user=" . urlencode($user);
+}
+
+// generate a random string
+function randomString($length) {
+	return substr(str_shuffle("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"), 0, $length);
+}
+
+// create a user if needed
 function createIfNeeded($userName='', $password='', $domainName=DEFAULT_DOMAIN_NAME, $domainDescription=DEFAULT_DOMAIN_DESCRIPTION, $endpointDescription=DEFAULT_ENDPOINT_DESCRIPTION, $areaCode=DEFAULT_AREA_CODE, $applicationName=DEFAULT_APPLICATION_NAME) {
   try {
     $client = new Catapult\Client;
-    $account = new Catapult\Account; 
+    $account = new Catapult\Account;
 
     // first let's retrieve or create
     // a new application
     //
     // TODO: currently supports a single user
     // this should be multiuser based
-    $newUser = addUserIfNeeded($userName, $password);
+    $newUser = checkUserExists($userName, $password);
     if ($newUser == SIP_APPLICATION_USER_CREATED) {
       // this means
       // our user was already
@@ -62,7 +77,12 @@ function createIfNeeded($userName='', $password='', $domainName=DEFAULT_DOMAIN_N
       return SIP_APPLICATION_USER_FOUND_WRONG_PASSWORD; 
     }
 
-    // seperate the applicationName from the other
+    // generate a random password (6~10 chars) if one is not provided
+    if ($password == null) {
+        $password = randomString(mt_rand(6, 10));
+    }
+
+    // separate the applicationName from the other
     // users by userName
     $applicationName .= " [" . $userName . "]";
     $applications = new Catapult\ApplicationCollection;
@@ -80,12 +100,12 @@ function createIfNeeded($userName='', $password='', $domainName=DEFAULT_DOMAIN_N
         "name" => $applicationName, 
         "callbackHttpMethod" => "POST",
         // our callbacks will
-        // be triggered to this
-        // page
+        // be triggered to the
+        // callback.php page
         //
         // as we are using PHP_SELF
         // add the userName in our callback
-        "incomingCallUrl" => "http://" . $_SERVER{"HTTP_HOST"} . preg_replace("/\/.*/", "", $_SERVER{'PHP_SELF'}) . "/"  . sprintf("callback/%s", $userName),
+        "incomingCallUrl" => callbackURL($userName),
         "autoAnswer" => TRUE
       ));
     } else {
@@ -105,12 +125,27 @@ function createIfNeeded($userName='', $password='', $domainName=DEFAULT_DOMAIN_N
     )->find(array(
       "name" => $domainName
     ));
-    
 
-    // have we created a domain     
-    // for this name, if we have
-    // lets use it
-    if (!$domains->isEmpty()) {
+	if ($domains->isEmpty()) {
+      // create our default
+      // domain
+      //
+      // The name on this easily identifiable
+      // is our definition, which can be
+      // found at the top of this program
+      $domain = new Catapult\Domains(array(
+         "name" => $domainName,
+         "description" => $domainDescription
+      ));
+      $endpoint = new Catapult\Endpoints($domain->id,array(
+        "name"=> $userName,
+        "applicationId" => $application->id,
+        "credentials" => array(
+          "username" => $userName,
+          "password" => $password
+        )
+      ));
+    } else {
       // application was 
       // already ran with this
       // no need to create
@@ -142,25 +177,6 @@ function createIfNeeded($userName='', $password='', $domainName=DEFAULT_DOMAIN_N
         //
         $endpoint = $endpoint->last();
       }
-    } else {
-      // create our default
-      // domain
-      //
-      // The name on this easily identifiable
-      // is our definition, which can be
-      // found at the top of this program
-      $domain = new Catapult\Domains(array(
-         "name" => $domainName,
-         "description" => $domainDescription
-      ));
-      $endpoint = new Catapult\Endpoints($domain->id,array(
-        "name"=> $userName, 
-        "applicationId" => $application->id,
-        "credentials" => array(
-          "userName" => $userName,
-          "password" => $password
-        )
-      ));
     }
     
     // we now need to allocate one number
@@ -226,20 +242,19 @@ function createIfNeeded($userName='', $password='', $domainName=DEFAULT_DOMAIN_N
   return SIP_APPLICATION_SCRIPT_ERROR;
 }
 
-// add a user to our
-// users.json if we need to
+// checks if a user exists on our
+// users.json file
 // this should validate the current password
 // 
-// accept the applicationId, default endpoint and our default number
-function addUserIfNeeded($userName='', $password='', $domain=array(), $endpoint=array(), $defaultNumber='') {
+function checkUserExists($userName='', $password='') {
 
-  $users = json_decode(file_get_contents(realpath("./users.json")));
+  $users = json_decode(file_get_contents(realpath("./") . "/" . DEFAULT_USERS_FILE));
   if (sizeof($users)>0) {
     foreach ($users as $user) {
-      if ($user->username == $userName && md5($password) == $user->password) {
-        return 1;
+      if ($user->userName == $userName && (empty($password) || md5($password) == $user->password)) {
+        return SIP_APPLICATION_USER_CREATED;
       }
-      if ($user->username == $userName) {
+      if ($user->userName == $userName) {
         // TODO we can wrap this around our exception 
 
         return SIP_APPLICATION_USER_FOUND_WRONG_PASSWORD; //same password was not provided, creating user was tried
@@ -248,7 +263,7 @@ function addUserIfNeeded($userName='', $password='', $domain=array(), $endpoint=
   }
   // generic this is a new user
 
-  return 0;
+  return SIP_APPLICATION_USER_NOT_FOUND;
 }
 
 // add a user to our
@@ -269,11 +284,12 @@ function addUser($userName, $password, $domain=array(), $endpoint=array(), $defa
   // make sure we specify our result
   return $res;
 }
+
 // once we are authenticated, we can
 // use getUser, this should return all our
 // data without having to make, lookup catapult 
 function getUser($userName='') {
-  $users = json_decode(file_get_contents(realpath("./") . "/" . DEFAULT_USERS_FILE));
+  $users = json_decode(file_get_contents(realpath("./") . "/" . DEFAULT_USERS_FILE), false);
   if (sizeof($users) > 0) {
     foreach ($users as $user) {
       if ($user->userName == $userName) {
@@ -288,6 +304,26 @@ function getUser($userName='') {
   // hardly possible, implementor mistake
   return null;
 }
+
+// create a new auth token
+// for the given domain and endpoint
+function createAuthToken($domainID, $endpointID) {
+  try {
+    // convert input to an object
+    $Endpoint = new Catapult\Endpoints($domainID, $endpointID);
+
+    // create a new auth token and return it
+    return $Endpoint->createAuthToken();
+  } catch (CatapultApiException $e) {
+    // something happened
+    // we should check
+
+    $error = $e->getResult();
+    // server errors will be handled
+    return $error;
+  }
+}
+
 // show an error in json
 // so it can be parsed same way
 // as a success, this should
@@ -295,5 +331,3 @@ function getUser($userName='') {
 function showError($msg) {
   printf(json_encode(array("message" => $msg)));
 }
-
-?>
