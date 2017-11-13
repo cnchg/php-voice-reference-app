@@ -1,5 +1,9 @@
-Bandwidth SIP Call registration
-=======================================================================
+<div align="center">
+
+# Bandwidth SIP Call registration
+
+<a href="http://dev.bandwidth.com"><img src="https://s3.amazonaws.com/bwdemos/BW_Voice.png"/></a>
+</div>
 
 This application implements 2 way SIP-PSTN call flow
 (using PHP catapult)
